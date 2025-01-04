@@ -1,6 +1,6 @@
 TORTOISE_ORM = {
     "connections": {
-        "default": "mysql://root:230904@localhost:3306/hola"
+        "default": "mysql://root:230904@localhost:3306/service"
     },
     "apps": {
         "models": {

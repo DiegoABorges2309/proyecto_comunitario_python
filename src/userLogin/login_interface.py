@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets
-from src.db.crud import UserLogin
+from src.db.crud import UserLogin, ItemInventory
 from src.db.__init__ import init, close
 import asyncio
 
@@ -79,7 +79,6 @@ class Ui_Dialog(object):
             _password = self.lineEdit_2.text()
             lg = UserLogin()
             result = await lg.verific_user(_user, _password)
-            print(result)
             if result:
                 Dialog.close()
             else:
@@ -98,12 +97,20 @@ class Ui_Dialog(object):
         self.label_2.setText(_translate("Dialog", "Usuario"))
         self.label_3.setText(_translate("Dialog", "Contraseña"))
 
+    async def prueba(self):
+        await init()
+        ii = ItemInventory()
+        await ii.add_item("bata", 15, "UNIDAD", "2121212")
+        await close()
 
 if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
+    # import sys
+    # app = QtWidgets.QApplication(sys.argv)
+    # Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()
-    ui.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec_())
+    # ui.setupUi(Dialog)
+    # Dialog.show()
+    # sys.exit(app.exec_())
+
+    asyncio.run(ui.prueba())
+
