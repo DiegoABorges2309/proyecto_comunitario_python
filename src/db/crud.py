@@ -26,6 +26,10 @@ class ItemInventory():
     def __init__(self):
         pass
 
+    async def get_all_item(self):
+        result = list(await Items.all())
+        return result
+
     async def add_item(self, _name_item, _quantity, _unit, _lot):
         try:
             result = await Items.create(name_item=_name_item, quantity=_quantity, unit=_unit, lot=_lot)
@@ -36,7 +40,6 @@ class ItemInventory():
                 print("no")
         except Exception as e:
             print(e)
-
 
 if __name__ == '__main__':
     pass
