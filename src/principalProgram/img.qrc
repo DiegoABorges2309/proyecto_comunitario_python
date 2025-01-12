@@ -1,0 +1,14 @@
+<RCC>
+  <qresource prefix="PrincipalProgram">
+    <file>ivssLogin.png</file>
+    <file>one_login.png</file>
+    <file>ivssLogin.png</file>
+    <file>mainOptionWhite.png</file>
+    <file>users.png</file>
+    <file>loupe.png</file>
+    <file>background.png</file>
+    <file>ivss.png</file>
+    <file>mainOption.png</file>
+    <file>IVSS_(azul).svg</file>
+  </qresource>
+</RCC>

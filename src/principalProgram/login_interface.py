@@ -87,7 +87,6 @@ class Ui_Dialog(object):
         except Exception as e:
             QtWidgets.QMessageBox.information(Dialog, "Sistema de Almacen", f"{e}")
 
-
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         self.label.setWhatsThis(_translate("Dialog", "<html><head/><body><p>fsdfsd</p></body></html>"))
@@ -97,20 +96,15 @@ class Ui_Dialog(object):
         self.label_2.setText(_translate("Dialog", "Usuario"))
         self.label_3.setText(_translate("Dialog", "Contraseña"))
 
-    async def prueba(self):
-        await init()
-        ii = ItemInventory()
-        await ii.add_item("bata", 15, "UNIDAD", "2121212")
-        await close()
+    def run(self):
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        global Dialog
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        sys.exit(app.exec_())
 
-if __name__ == "__main__":
-    # import sys
-    # app = QtWidgets.QApplication(sys.argv)
-    # Dialog = QtWidgets.QDialog()
-    ui = Ui_Dialog()
-    # ui.setupUi(Dialog)
-    # Dialog.show()
-    # sys.exit(app.exec_())
 
-    asyncio.run(ui.prueba())
 
