@@ -420,7 +420,9 @@ border-radius: 20px;</string>
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;&lt;br/&gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="styleSheet">
-       <string notr="true">background: none</string>
+       <string notr="true">background: none;
+color: rgb(70, 79, 78);
+padding: 2px;</string>
       </property>
       <property name="textElideMode">
        <enum>Qt::ElideMiddle</enum>

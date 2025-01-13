@@ -71,17 +71,37 @@ class MainPrincipal(QDialog):
         self.pushButton_6.clicked.connect(self.showMinimized)
         #tabla
         self.inventario.verticalHeader().hide()
+        self.inventario.setShowGrid(True)
+        self.inventario.setGridStyle(QtCore.Qt.SolidLine)
+        self.inventario.setStyleSheet("QTableWidget { gridline-color: #dae8f5; background: none; color: rgb(70, 79, 78); padding: 2px;}")
         #datos:
         self.date = _date
         self.lines = _lines
         self.inventario.setRowCount(self.lines)
         index_a = 0
         for row in self.date:
-            print(self.date[0])
-            for cell in row:
-                item = QtWidgets.QTableWidgetItem()
-                item.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
-                item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            item_one = QtWidgets.QTableWidgetItem(str(row.name_item))
+            item_two = QtWidgets.QTableWidgetItem(str(row.quantity))
+            item_tre = QtWidgets.QTableWidgetItem(str(row.unit))
+            item_four = QtWidgets.QTableWidgetItem(str(row.lot))
+            item_five = QtWidgets.QTableWidgetItem(str(row.exp))
+
+            # item_one.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_one.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+#             item_two.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_two.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+#             item_tre.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_tre.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+#             item_four.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_four.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+#             item_five.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_five.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+
+            self.inventario.setItem(index_a, 0, item_one)
+            self.inventario.setItem(index_a, 1, item_two)
+            self.inventario.setItem(index_a, 2, item_tre)
+            self.inventario.setItem(index_a, 3, item_four)
+            self.inventario.setItem(index_a, 4, item_five)
             index_a += 1
 
 
