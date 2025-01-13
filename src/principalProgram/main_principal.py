@@ -73,11 +73,14 @@ class MainPrincipal(QDialog):
         self.inventario.verticalHeader().hide()
         self.inventario.setShowGrid(True)
         self.inventario.setGridStyle(QtCore.Qt.SolidLine)
-        self.inventario.setStyleSheet("QTableWidget { gridline-color: #dae8f5; background: none; color: rgb(70, 79, 78); padding: 2px;}")
+        style = "QTableWidget { gridline-color: #e7eff7; background: none; color: rgb(70, 79, 78); padding: 2px;}"
+        self.inventario.setStyleSheet(style)
         #datos:
         self.date = _date
         self.lines = _lines
         self.inventario.setRowCount(self.lines)
+        #botonbuscar
+        self.pushButton_4.clicked.connect(self.actions)
         index_a = 0
         for row in self.date:
             item_one = QtWidgets.QTableWidgetItem(str(row.name_item))
@@ -103,6 +106,53 @@ class MainPrincipal(QDialog):
             self.inventario.setItem(index_a, 3, item_four)
             self.inventario.setItem(index_a, 4, item_five)
             index_a += 1
+
+    def actions(self):
+        try:
+            text = self.lineEdit.text()
+            asyncio.run(self.search(text))
+        except Exception as e:
+            QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
+
+    async def search(self, _name_item):
+        ii = ItemInventory()
+        await init()
+        result = await ii.get_ones_item(_name_item)
+        if result[0] != None:
+            await self.upgrade(result)
+        await close()
+
+    async def upgrade(self, _dates):
+        index_b = 0
+        index_c = 0
+        for row in _dates:
+            index_b += 1
+        self.inventario.setRowCount(index_b)
+        for row in _dates:
+            item_one = QtWidgets.QTableWidgetItem(str(row.name_item))
+            item_two = QtWidgets.QTableWidgetItem(str(row.quantity))
+            item_tre = QtWidgets.QTableWidgetItem(str(row.unit))
+            item_four = QtWidgets.QTableWidgetItem(str(row.lot))
+            item_five = QtWidgets.QTableWidgetItem(str(row.exp))
+
+            # item_one.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_one.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            #             item_two.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_two.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            #             item_tre.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_tre.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            #             item_four.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_four.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            #             item_five.setTextAlignment(QtCore.Qt.AlignCenter)  # Centrar texto
+            item_five.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+
+            self.inventario.setItem(index_c, 0, item_one)
+            self.inventario.setItem(index_c, 1, item_two)
+            self.inventario.setItem(index_c, 2, item_tre)
+            self.inventario.setItem(index_c, 3, item_four)
+            self.inventario.setItem(index_c, 4, item_five)
+            index_c += 1
+
 
 
 if __name__ == '__main__':

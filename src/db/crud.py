@@ -30,6 +30,10 @@ class ItemInventory():
         result = list(await Items.all())
         return result
 
+    async def get_ones_item(self, query):
+        result = list(await Items.filter(name_item__icontains=query))
+        return result
+
     async def add_item(self, _name_item, _quantity, _unit, _lot):
         try:
             result = await Items.create(name_item=_name_item, quantity=_quantity, unit=_unit, lot=_lot)

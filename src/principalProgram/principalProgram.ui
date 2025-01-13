@@ -422,7 +422,12 @@ border-radius: 20px;</string>
       <property name="styleSheet">
        <string notr="true">background: none;
 color: rgb(70, 79, 78);
-padding: 2px;</string>
+padding: 2px;
+gridline-color: rgb(255, 0, 0);
+
+QTableWidget { 
+gridline-color: red; 
+}</string>
       </property>
       <property name="textElideMode">
        <enum>Qt::ElideMiddle</enum>
