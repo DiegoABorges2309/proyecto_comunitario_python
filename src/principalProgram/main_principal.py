@@ -1,6 +1,6 @@
 import sys
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QLineEdit
+from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QLineEdit, QFrame
 from PyQt5.uic import loadUi
 import img.img_qrc
 from src.db.__init__ import init, close
@@ -68,6 +68,10 @@ class MainPrincipal(QDialog):
         self.pushButton_3.clicked.connect(self.close)
         # botton -
         self.pushButton_6.clicked.connect(self.showMinimized)
+        #boton agg:
+        self.addInsumo.clicked.connect(lambda : self.show_agg_frame())
+        # frame agg:
+        self.aggFrame.hide()
         # tabla
         self.inventario.verticalHeader().hide()
         self.inventario.setShowGrid(True)
@@ -76,7 +80,13 @@ class MainPrincipal(QDialog):
         self.inventario.setStyleSheet(style)
         # botonbuscar
         self.pushButton_4.clicked.connect(self.actions)
+        # Menu:
         self.show_items(_date)
+        self.editarFrame.hide()
+        self.editarFrame_2.hide()
+        self.actualizarFrame.hide()
+        self.eliminarFrame.hide()
+        self.exelFrame.hide()
 
     def show_items(self, _dates):
         index_b = 0
@@ -109,7 +119,7 @@ class MainPrincipal(QDialog):
             self.inventario.setItem(index_a, 4, item_five)
             self.editarBoton = QtWidgets.QPushButton()
             self.editarBoton.setText("Editar")
-            self.editarBoton.clicked.connect(lambda _, _id=row.id: self.edit(_id))
+            self.editarBoton.clicked.connect(lambda _, date = row, _pos = self.editarBoton.geometry().x() : self.edit(date, _pos))
             self.editarBoton.setStyleSheet("""QPushButton{
         	                                  background: transparent;
         	                                  border: none;
@@ -132,15 +142,39 @@ class MainPrincipal(QDialog):
 
         self.inventario.horizontalHeader().setStretchLastSection(True)
 
-    def edit(self, cell):
-        asyncio.run(self._upgrade(cell))
+    def edit(self, date, _pos):
+        try:
+            asyncio.run(self._upgrade(date.name_item))
+            buttom = self.sender()
+            position = buttom.pos()
 
-    async def _upgrade(self, id):
+            if buttom and position.y() < 300:
+                self.editarFrame.setGeometry(position.x()-45, position.y()+47, 111, 141)
+                self.editarFrame.show()
+            else:
+                self.editarFrame.setGeometry(position.x() - 45, 345, 111, 141)
+                self.editarFrame.show()
+
+            self.editarFrame_2.hide()
+            self.actualizarFrame.hide()
+            self.eliminarFrame.hide()
+            self.exelFrame.hide()
+            self.aggFrame.hide()
+
+            self.actualizar.clicked.connect(lambda: self._show_buttom(position.x()-45, position.y()+47, date,
+                                        397, self.actualizarFrame, 301, 111))
+            self.editar.clicked.connect(lambda: self._show_buttom(position.x()-175, position.y()+47, date,
+                                        250, self.editarFrame_2, 441, 271))
+            self.eliminar.clicked.connect(lambda: self._show_buttom(position.x()-45, position.y()+47, date,
+                                        397, self.eliminarFrame, 301, 111))
+        except Exception as e:
+            print(e)
+
+    async def _upgrade(self, _name):
         ii = ItemInventory()
         await init()
-        await ii.update_item(id)
+        await ii.update_item(_name)
         await close()
-
 
     def actions(self):
         try:
@@ -157,6 +191,40 @@ class MainPrincipal(QDialog):
         if result[0] != None:
             self.show_items(result)
         await close()
+
+    def _show_buttom(self, pos_x, pos_y, date, limite, frame_show, tamx, tamy):
+        try:
+            self.label_5.setText(date.name_item)
+            self.label_7.setText(date.name_item)
+            self.label_9.setText(date.name_item)
+            if pos_y > limite:
+                frame_show.setGeometry(pos_x - 200, limite, tamx, tamy)
+            else:
+                frame_show.setGeometry(pos_x - 200, pos_y, tamx, tamy)
+            self.editarFrame.hide()
+            frame_show.show()
+            print(date.name_item)
+            # agregados:
+            self.actualizarLine_3.setText(date.name_item)
+            self.actualizarLine_4.setText(date.unit)
+            self.actualizarLine_5.setText(str(date.quantity))
+            self.actualizarLine_6.setText(date.lot)
+            self.actualizarLine_7.setText(str(date.exp))
+        except Exception as e:
+            print(e)
+
+    def show_agg_frame(self):
+        self.actualizarLine_11.setText('')
+        self.actualizarLine_12.setText('')
+        self.actualizarLine_13.setText('')
+        self.actualizarLine_14.setText('')
+        self.actualizarLine_15.setText('')
+        self.editarFrame.hide()
+        self.editarFrame_2.hide()
+        self.actualizarFrame.hide()
+        self.eliminarFrame.hide()
+        self.exelFrame.hide()
+        self.aggFrame.show()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
