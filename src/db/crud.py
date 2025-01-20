@@ -45,9 +45,14 @@ class ItemInventory():
         except Exception as e:
             print(e)
 
-    async def update_item(self, _name):
-        result = await Items.filter(name_item = _name)
-        print(result[0].quantity)
+    async def update_item(self, _name, _quantity):
+        try:
+            print(f"recibo: {_name}")
+            item = await Items.get(name_item=_name)
+            item.quantity = _quantity
+            await item.save()
+        except Exception as e:
+            pass
 
 if __name__ == '__main__':
     pass

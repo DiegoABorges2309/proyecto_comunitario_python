@@ -61,6 +61,9 @@ class MainPrincipal(QDialog):
     def __init__(self, _date, _user):
         super(MainPrincipal, self).__init__()
         loadUi('principalProgram.ui', self)
+        #loop asyncio:
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
         # Texto de usuario:
         self.profile.setText(_user)
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
@@ -119,7 +122,8 @@ class MainPrincipal(QDialog):
             self.inventario.setItem(index_a, 4, item_five)
             self.editarBoton = QtWidgets.QPushButton()
             self.editarBoton.setText("Editar")
-            self.editarBoton.clicked.connect(lambda _, date = row, _pos = self.editarBoton.geometry().x() : self.edit(date, _pos))
+            self.editarBoton.clicked.connect(lambda _, date = row,
+                                            _pos = self.editarBoton.geometry().x() : self.show_edit_frame(date, _pos))
             self.editarBoton.setStyleSheet("""QPushButton{
         	                                  background: transparent;
         	                                  border: none;
@@ -142,9 +146,43 @@ class MainPrincipal(QDialog):
 
         self.inventario.horizontalHeader().setStretchLastSection(True)
 
-    def edit(self, date, _pos):
+    def show_frames(self, pos_x, pos_y, date, limite, frame_show, tamx, tamy):
         try:
-            asyncio.run(self._upgrade(date.name_item))
+            self.label_5.setText(date.name_item)
+            self.label_7.setText(date.name_item)
+            self.label_9.setText(date.name_item)
+            if pos_y > limite:
+                frame_show.setGeometry(pos_x - 200, limite, tamx, tamy)
+            else:
+                frame_show.setGeometry(pos_x - 200, pos_y, tamx, tamy)
+            self.editarFrame.hide()
+            frame_show.show()
+            # agregados:
+            self.actualizarLine_3.setText(date.name_item)
+            self.actualizarLine_4.setText(date.unit)
+            self.actualizarLine_5.setText(str(date.quantity))
+            self.actualizarLine_6.setText(date.lot)
+            self.actualizarLine_7.setText(str(date.exp))
+        except Exception as e:
+            print(e)
+            QtWidgets.QMessageBox.information(self, "Inventario de Almacen", f"e")
+
+    def show_agg_frame(self):
+        self.actualizarLine_11.setText('')
+        self.actualizarLine_12.setText('')
+        self.actualizarLine_13.setText('')
+        self.actualizarLine_14.setText('')
+        self.actualizarLine_15.setText('')
+        self.editarFrame.hide()
+        self.editarFrame_2.hide()
+        self.actualizarFrame.hide()
+        self.eliminarFrame.hide()
+        self.exelFrame.hide()
+        self.aggFrame.show()
+
+    def show_edit_frame(self, date, _pos):
+        try:
+            print(f"envio:{date.name_item}")
             buttom = self.sender()
             position = buttom.pos()
 
@@ -161,28 +199,50 @@ class MainPrincipal(QDialog):
             self.exelFrame.hide()
             self.aggFrame.hide()
 
-            self.actualizar.clicked.connect(lambda: self._show_buttom(position.x()-45, position.y()+47, date,
+            self.actualizar.clicked.connect(lambda: self.show_frames(position.x()-45, position.y()+47, date,
                                         397, self.actualizarFrame, 301, 111))
-            self.editar.clicked.connect(lambda: self._show_buttom(position.x()-175, position.y()+47, date,
+            self.editar.clicked.connect(lambda: self.show_frames(position.x()-175, position.y()+47, date,
                                         250, self.editarFrame_2, 441, 271))
-            self.eliminar.clicked.connect(lambda: self._show_buttom(position.x()-45, position.y()+47, date,
+            self.eliminar.clicked.connect(lambda: self.show_frames(position.x()-45, position.y()+47, date,
                                         397, self.eliminarFrame, 301, 111))
+            #sub menu:
+            self.guardarBoton.clicked.connect(lambda :self.actions_upgrade(date.name_item, self.actualizarLine.text()))
         except Exception as e:
             print(e)
-
-    async def _upgrade(self, _name):
-        ii = ItemInventory()
-        await init()
-        await ii.update_item(_name)
-        await close()
+            QtWidgets.QMessageBox.information(self, "Inventario de Almacen", f"e")
 
     def actions(self):
         try:
             text = self.lineEdit.text()
             asyncio.run(self.search(text))
         except Exception as e:
-            QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
             print(f"ERROR:{e}")
+            if e != 'Event loop is closed':
+                QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
+        except IndexError as e:
+            QtWidgets.QMessageBox.information(self, "Sistema de Almacen", "epa")
+
+    def actions_upgrade(self, _name, _quantity):
+        try:
+            new_quantity = float(_quantity)
+            self.loop.run_until_complete(self._upgrade(_name, new_quantity))
+            log = Login()
+            date = self.loop.run_until_complete(log.get_date())
+            self.actualizarFrame.hide()
+            # self.actualizarLine.setText('')
+            self.show_items(date)
+        except ValueError as e:
+            QtWidgets.QMessageBox.information(self, "Sistema de Almacen", "El valor no es un número válido")
+        except Exception as e:
+            print(f"ERROR_2: {e}")
+            if str(e) != 'Event loop is closed':
+                QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
+
+    async def _upgrade(self, _name, _quantity):
+        ii = ItemInventory()
+        await init()
+        await ii.update_item(_name, _quantity)
+        await close()
 
     async def search(self, _name_item):
         ii = ItemInventory()
@@ -192,42 +252,11 @@ class MainPrincipal(QDialog):
             self.show_items(result)
         await close()
 
-    def _show_buttom(self, pos_x, pos_y, date, limite, frame_show, tamx, tamy):
-        try:
-            self.label_5.setText(date.name_item)
-            self.label_7.setText(date.name_item)
-            self.label_9.setText(date.name_item)
-            if pos_y > limite:
-                frame_show.setGeometry(pos_x - 200, limite, tamx, tamy)
-            else:
-                frame_show.setGeometry(pos_x - 200, pos_y, tamx, tamy)
-            self.editarFrame.hide()
-            frame_show.show()
-            print(date.name_item)
-            # agregados:
-            self.actualizarLine_3.setText(date.name_item)
-            self.actualizarLine_4.setText(date.unit)
-            self.actualizarLine_5.setText(str(date.quantity))
-            self.actualizarLine_6.setText(date.lot)
-            self.actualizarLine_7.setText(str(date.exp))
-        except Exception as e:
-            print(e)
-
-    def show_agg_frame(self):
-        self.actualizarLine_11.setText('')
-        self.actualizarLine_12.setText('')
-        self.actualizarLine_13.setText('')
-        self.actualizarLine_14.setText('')
-        self.actualizarLine_15.setText('')
-        self.editarFrame.hide()
-        self.editarFrame_2.hide()
-        self.actualizarFrame.hide()
-        self.eliminarFrame.hide()
-        self.exelFrame.hide()
-        self.aggFrame.show()
-
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    program = Login()
-    program.show()
-    sys.exit(app.exec_())
+    try:
+        app = QApplication(sys.argv)
+        program = Login()
+        program.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(e)
