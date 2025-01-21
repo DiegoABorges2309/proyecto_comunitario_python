@@ -76,6 +76,7 @@ class MainPrincipal(QDialog):
         # frame agg:
         self.aggFrame.hide()
         # tabla
+        self.indicator = False
         self.inventario.verticalHeader().hide()
         self.inventario.setShowGrid(True)
         self.inventario.setGridStyle(QtCore.Qt.SolidLine)
@@ -83,6 +84,8 @@ class MainPrincipal(QDialog):
         self.inventario.setStyleSheet(style)
         # botonbuscar
         self.pushButton_4.clicked.connect(self.actions)
+        # boton de panel:
+        self.panelControlButtom.clicked.connect(self.show_panel_frame)
         # Menu:
         self.show_items(_date)
         self.editarFrame.hide()
@@ -90,8 +93,12 @@ class MainPrincipal(QDialog):
         self.actualizarFrame.hide()
         self.eliminarFrame.hide()
         self.exelFrame.hide()
+        #sub menu:
+        self.date = []
+        self.guardarBoton.clicked.connect(lambda: self.actions_upgrade(self.date.name_item, self.actualizarLine.text()))
 
     def show_items(self, _dates):
+        self.indicator = False
         index_b = 0
         for row in _dates:
             index_b += 1
@@ -180,8 +187,21 @@ class MainPrincipal(QDialog):
         self.exelFrame.hide()
         self.aggFrame.show()
 
+    def show_panel_frame(self):
+        self.editarFrame.hide()
+        self.editarFrame_2.hide()
+        self.actualizarFrame.hide()
+        self.eliminarFrame.hide()
+        self.exelFrame.hide()
+        self.aggFrame.hide()
+        log = Login()
+        date = self.loop.run_until_complete(log.get_date())
+        self.lineEdit.setText('')
+        self.show_items(date)
+
     def show_edit_frame(self, date, _pos):
         try:
+            self.date = date
             print(f"envio:{date.name_item}")
             buttom = self.sender()
             position = buttom.pos()
@@ -205,8 +225,6 @@ class MainPrincipal(QDialog):
                                         250, self.editarFrame_2, 441, 271))
             self.eliminar.clicked.connect(lambda: self.show_frames(position.x()-45, position.y()+47, date,
                                         397, self.eliminarFrame, 301, 111))
-            #sub menu:
-            self.guardarBoton.clicked.connect(lambda :self.actions_upgrade(date.name_item, self.actualizarLine.text()))
         except Exception as e:
             print(e)
             QtWidgets.QMessageBox.information(self, "Inventario de Almacen", f"e")
@@ -215,6 +233,7 @@ class MainPrincipal(QDialog):
         try:
             text = self.lineEdit.text()
             asyncio.run(self.search(text))
+            self.indicator = True
         except Exception as e:
             print(f"ERROR:{e}")
             if e != 'Event loop is closed':
@@ -227,10 +246,13 @@ class MainPrincipal(QDialog):
             new_quantity = float(_quantity)
             self.loop.run_until_complete(self._upgrade(_name, new_quantity))
             log = Login()
-            date = self.loop.run_until_complete(log.get_date())
             self.actualizarFrame.hide()
-            # self.actualizarLine.setText('')
-            self.show_items(date)
+            self.actualizarLine.setText('')
+            if self.indicator == False and self.lineEdit.text() == '':
+                date = self.loop.run_until_complete(log.get_date())
+                self.show_items(date)
+            else:
+                date = self.loop.run_until_complete(self.search(self.lineEdit.text()))
         except ValueError as e:
             QtWidgets.QMessageBox.information(self, "Sistema de Almacen", "El valor no es un número válido")
         except Exception as e:
@@ -239,6 +261,7 @@ class MainPrincipal(QDialog):
                 QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
 
     async def _upgrade(self, _name, _quantity):
+        self.indicator = False
         ii = ItemInventory()
         await init()
         await ii.update_item(_name, _quantity)
@@ -250,6 +273,7 @@ class MainPrincipal(QDialog):
         result = await ii.get_ones_item(_name_item)
         if result[0] != None:
             self.show_items(result)
+            self.indicator = True
         await close()
 
 if __name__ == '__main__':
