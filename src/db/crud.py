@@ -52,7 +52,20 @@ class ItemInventory():
             item.quantity = _quantity
             await item.save()
         except Exception as e:
-            pass
+            print(f"{e}")
+
+    async def update_info_item(self, _indx, _name, _quantity, _unit, _lot, _exp):
+        try:
+            print(f"recibo: {_name}")
+            item = await Items.get(name_item=_indx)
+            item.name_item = _name
+            item.quantity = _quantity
+            item.unit = _unit
+            item.lot = _lot
+            item.exp = _exp
+            await item.save()
+        except Exception as e:
+            print(f"{e}")
 
 if __name__ == '__main__':
     pass

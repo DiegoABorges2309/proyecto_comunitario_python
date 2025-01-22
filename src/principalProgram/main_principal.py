@@ -6,6 +6,7 @@ import img.img_qrc
 from src.db.__init__ import init, close
 import asyncio
 from src.db.crud import UserLogin, ItemInventory
+from datetime import datetime
 
 class Login(QDialog):
     def __init__(self):
@@ -96,6 +97,20 @@ class MainPrincipal(QDialog):
         #sub menu:
         self.date = []
         self.guardarBoton.clicked.connect(lambda: self.actions_upgrade(self.date.name_item, self.actualizarLine.text()))
+        self._name = self.actualizarLine_3.text()
+        self._unit = self.actualizarLine_4.text()
+        self._quantity = self.actualizarLine_5.text()
+        self._lot = self.actualizarLine_6.text()
+        self._exp = self.actualizarLine_7.text()
+        self.guardarBoton_3.clicked.connect(lambda: self.actions_upgrade_info(self.date.name_item))
+
+    def mousePressEvent(self, event):
+        self.aggFrame.hide()
+        self.editarFrame.hide()
+        self.editarFrame_2.hide()
+        self.actualizarFrame.hide()
+        self.eliminarFrame.hide()
+        self.exelFrame.hide()
 
     def show_items(self, _dates):
         self.indicator = False
@@ -259,6 +274,34 @@ class MainPrincipal(QDialog):
             print(f"ERROR_2: {e}")
             if str(e) != 'Event loop is closed':
                 QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
+
+    def actions_upgrade_info(self, indx):
+        try:
+            new_quantity = float(self.actualizarLine_5.text())
+            new_dateTime = datetime.strptime(self.actualizarLine_7.text(), "%Y-%m-%d").date()
+            self.loop.run_until_complete(self._upgrade_info( indx, self.actualizarLine_3.text(), new_quantity,
+            self.actualizarLine_4.text(), self.actualizarLine_5.text(), new_dateTime))
+            log = Login()
+            self.editarFrame_2.hide()
+            if self.indicator == False and self.lineEdit.text() == '':
+                date = self.loop.run_until_complete(log.get_date())
+                self.show_items(date)
+            else:
+                date = self.loop.run_until_complete(self.search(self.lineEdit.text()))
+        except ValueError as e:
+            print(f"ERRO_3: {e}")
+            QtWidgets.QMessageBox.information(self, "Sistema de Almacen", "El valor no es un número válido")
+        except Exception as e:
+            print(f"ERROR_2: {e}")
+            if str(e) != 'Event loop is closed':
+                QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
+
+    async def _upgrade_info(self, _indx, _name, _quantity, _unit, _lot, _exp):
+        self.indicator = False
+        ii = ItemInventory()
+        await init()
+        await ii.update_info_item(_indx, _name, _quantity, _unit, _lot, _exp)
+        await close()
 
     async def _upgrade(self, _name, _quantity):
         self.indicator = False
