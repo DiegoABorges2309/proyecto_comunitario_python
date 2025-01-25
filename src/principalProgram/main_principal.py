@@ -103,6 +103,8 @@ class MainPrincipal(QDialog):
         self._lot = self.actualizarLine_6.text()
         self._exp = self.actualizarLine_7.text()
         self.guardarBoton_3.clicked.connect(lambda: self.actions_upgrade_info(self.date.name_item))
+        self.guardarBoton_5.clicked.connect(lambda: self.actions_delete(self.date.name_item))
+        self.guardarBoton_6.clicked.connect(self.eliminarFrame.hide)
 
     def mousePressEvent(self, event):
         self.aggFrame.hide()
@@ -138,8 +140,8 @@ class MainPrincipal(QDialog):
             item_five.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
             self.inventario.setItem(index_a, 0, item_one)
-            self.inventario.setItem(index_a, 1, item_two)
-            self.inventario.setItem(index_a, 2, item_tre)
+            self.inventario.setItem(index_a, 2, item_two)
+            self.inventario.setItem(index_a, 1, item_tre)
             self.inventario.setItem(index_a, 3, item_four)
             self.inventario.setItem(index_a, 4, item_five)
             self.editarBoton = QtWidgets.QPushButton()
@@ -180,11 +182,16 @@ class MainPrincipal(QDialog):
             self.editarFrame.hide()
             frame_show.show()
             # agregados:
-            self.actualizarLine_3.setText(date.name_item)
-            self.actualizarLine_4.setText(date.unit)
-            self.actualizarLine_5.setText(str(date.quantity))
-            self.actualizarLine_6.setText(date.lot)
-            self.actualizarLine_7.setText(str(date.exp))
+            b = [date.name_item, date.unit, str(date.quantity), date.lot, str(date.exp)]
+            linesEdit = [self.actualizarLine_3, self.actualizarLine_4, self.actualizarLine_5, self.actualizarLine_6,
+                         self.actualizarLine_7]
+            for index in range(5):
+                if b[index] == '' or b[index] == 'None':
+                    linesEdit[index].setText('')
+                else:
+                    linesEdit[index].setText(b[index])
+
+
         except Exception as e:
             print(e)
             QtWidgets.QMessageBox.information(self, "Inventario de Almacen", f"e")
@@ -277,10 +284,21 @@ class MainPrincipal(QDialog):
 
     def actions_upgrade_info(self, indx):
         try:
-            new_quantity = float(self.actualizarLine_5.text())
-            new_dateTime = datetime.strptime(self.actualizarLine_7.text(), "%Y-%m-%d").date()
-            self.loop.run_until_complete(self._upgrade_info( indx, self.actualizarLine_3.text(), new_quantity,
-            self.actualizarLine_4.text(), self.actualizarLine_5.text(), new_dateTime))
+            new_quantity = None
+            new_dateTime = None
+            c = [self.actualizarLine_3.text(), self.actualizarLine_5.text(), self.actualizarLine_4.text(),
+                 self.actualizarLine_6.text(), self.actualizarLine_7.text()]
+            for index in range(5):
+                if c[index] == '':
+                    c[index] = None
+            if c[1] != None:
+                new_quantity = float(c[1])
+
+            if c[4] != None:
+                new_dateTime = datetime.strptime(c[4], "%Y-%m-%d").date()
+
+            self.loop.run_until_complete(self._upgrade_info( indx, c[0], new_quantity,
+            c[2], c[3], new_dateTime))
             log = Login()
             self.editarFrame_2.hide()
             if self.indicator == False and self.lineEdit.text() == '':
@@ -296,12 +314,15 @@ class MainPrincipal(QDialog):
             if str(e) != 'Event loop is closed':
                 QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
 
-    async def _upgrade_info(self, _indx, _name, _quantity, _unit, _lot, _exp):
-        self.indicator = False
-        ii = ItemInventory()
-        await init()
-        await ii.update_info_item(_indx, _name, _quantity, _unit, _lot, _exp)
-        await close()
+    def actions_delete(self, _name):
+        try:
+            self.loop.run_until_complete(self._delete(_name))
+            log = Login()
+            date = self.loop.run_until_complete(log.get_date())
+            self.show_items(date)
+            self.eliminarFrame.hide()
+        except Exception as e:
+            print(f"ERROR_2: {e}")
 
     async def _upgrade(self, _name, _quantity):
         self.indicator = False
@@ -309,6 +330,25 @@ class MainPrincipal(QDialog):
         await init()
         await ii.update_item(_name, _quantity)
         await close()
+
+    async def _upgrade_info(self, _indx, _name, _quantity, _unit, _lot, _exp):
+        self.indicator = False
+        a = [_name, _quantity, _unit, _lot, _exp]
+        for argument in a:
+            if argument == '':
+                argument = None
+        ii = ItemInventory()
+        await init()
+        await ii.update_info_item(_indx, _name, _quantity, _unit, _lot, _exp)
+        await close()
+
+    async def _delete(self, _name):
+        ii = ItemInventory()
+        await init()
+        await ii.delete_item(_name)
+        await close()
+
+
 
     async def search(self, _name_item):
         ii = ItemInventory()

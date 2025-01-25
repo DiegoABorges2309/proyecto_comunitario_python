@@ -67,5 +67,13 @@ class ItemInventory():
         except Exception as e:
             print(f"{e}")
 
+    async def delete_item(self, _name):
+        try:
+            item = await Items.get(name_item=_name)
+            await item.delete()
+            await item.save()
+        except Exception as e:
+            print(f"{e}")
+
 if __name__ == '__main__':
     pass
