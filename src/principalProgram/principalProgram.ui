@@ -1115,7 +1115,7 @@ color: rgb(98, 126, 152);</string>
         <string/>
        </property>
        <property name="placeholderText">
-        <string/>
+        <string>Año-Mes-Dia</string>
        </property>
       </widget>
       <widget class="QLabel" name="info_5">
@@ -1918,7 +1918,7 @@ color: rgb(98, 126, 152);</string>
        <string/>
       </property>
       <property name="placeholderText">
-       <string/>
+       <string>Año-Mes-Dia</string>
       </property>
      </widget>
      <widget class="QLabel" name="info_11">

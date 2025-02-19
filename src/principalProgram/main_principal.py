@@ -87,7 +87,7 @@ class MainPrincipal(QDialog):
         style = "QTableWidget { gridline-color: #e7eff7; background: none; color: rgb(70, 79, 78); padding: 2px;}"
         self.inventario.setStyleSheet(style)
         # botonbuscar
-        self.pushButton_4.clicked.connect(self.actions)
+        self.pushButton_4.clicked.connect(self.actions_search)
         # boton de panel:
         self.panelControlButtom.clicked.connect(self.show_panel_frame)
         # Menu:
@@ -253,19 +253,18 @@ class MainPrincipal(QDialog):
                                         397, self.eliminarFrame, 301, 111))
         except Exception as e:
             print(e)
-            QtWidgets.QMessageBox.information(self, "Inventario de Almacen", f"e")
+            QtWidgets.QMessageBox.information(self, "Inventario de Almacen", f"{e}")
 
-    def actions(self):
+    def actions_search(self):
         try:
             text = self.lineEdit.text()
-            asyncio.run(self.search(text))
+            boolean = self.loop.run_until_complete(self._search(text))
+            if boolean == False:
+                QtWidgets.QMessageBox.information(self, "Inventario de Almacen",
+            "No se ha encontrado un insumo con esa descripcion")
             self.indicator = True
         except Exception as e:
             print(f"ERROR:{e}")
-            if e != 'Event loop is closed':
-                QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
-        except IndexError as e:
-            QtWidgets.QMessageBox.information(self, "Sistema de Almacen", "epa")
 
     def actions_upgrade(self, _name, _quantity):
         try:
@@ -331,6 +330,18 @@ class MainPrincipal(QDialog):
         except Exception as e:
             print(f"ERRRORORORS: {e}")
 
+    async def _search(self, _name_item):
+        ii = ItemInventory()
+        await init()
+        result = await ii.get_ones_item(_name_item)
+        await close()
+        if result[0] != None:
+            self.show_items(result)
+            self.indicator = True
+            return True
+        else:
+            return False
+
     async def _upgrade(self, _name, _quantity):
         self.indicator = False
         ii = ItemInventory()
@@ -364,15 +375,6 @@ class MainPrincipal(QDialog):
         else:
             QtWidgets.QMessageBox.information(self, "Sistema de Almacen",
             "Ya se encuentra un articulo con esta descripcion.")
-        await close()
-
-    async def search(self, _name_item):
-        ii = ItemInventory()
-        await init()
-        result = await ii.get_ones_item(_name_item)
-        if result[0] != None:
-            self.show_items(result)
-            self.indicator = True
         await close()
 
 if __name__ == '__main__':

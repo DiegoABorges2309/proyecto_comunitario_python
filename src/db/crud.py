@@ -27,12 +27,23 @@ class ItemInventory():
         pass
 
     async def get_all_item(self):
-        result = list(await Items.all())
+        result = list(await Items.all().order_by('name_item'))
         return result
 
     async def get_ones_item(self, query):
-        result = list(await Items.filter(name_item__icontains=query))
-        return result
+        result = list(await Items.filter(name_item__icontains=query).order_by('name_item'))
+        if len(result) != 0:
+            return result
+        else:
+            result_1 = list(await Items.filter(lot__icontains=query).order_by('name_item'))
+            if len(result_1) != 0:
+                return result_1
+            else:
+                result_2 = list(await Items.filter(exp__icontains=query).order_by('name_item'))
+                if len(result_2) != 0:
+                    return result_2
+                else:
+                    return [None]
 
     async def add_item(self, _name_item, _quantity, _unit, _lot, _exp):
         try:
