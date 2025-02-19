@@ -1,12 +1,14 @@
-import sys
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QLineEdit, QFrame
-from PyQt5.uic import loadUi
-import img.img_qrc
-from src.db.__init__ import init, close
 import asyncio
-from src.db.crud import UserLogin, ItemInventory
+import sys
 from datetime import datetime
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit
+from PyQt5.uic import loadUi
+from src.db.__init__ import init, close
+from src.db.crud import UserLogin, ItemInventory
+from functions import Functions
+from img import img_qrc
+
 
 class Login(QDialog):
     def __init__(self):
@@ -65,6 +67,7 @@ class MainPrincipal(QDialog):
         #loop asyncio:
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
+        self.func = Functions()
         # Texto de usuario:
         self.profile.setText(_user)
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
@@ -105,6 +108,7 @@ class MainPrincipal(QDialog):
         self.guardarBoton_3.clicked.connect(lambda: self.actions_upgrade_info(self.date.name_item))
         self.guardarBoton_5.clicked.connect(lambda: self.actions_delete(self.date.name_item))
         self.guardarBoton_6.clicked.connect(self.eliminarFrame.hide)
+        self.guardarBoton_7.clicked.connect(self.actions_addInsumo)
 
     def mousePressEvent(self, event):
         self.aggFrame.hide()
@@ -284,21 +288,10 @@ class MainPrincipal(QDialog):
 
     def actions_upgrade_info(self, indx):
         try:
-            new_quantity = None
-            new_dateTime = None
             c = [self.actualizarLine_3.text(), self.actualizarLine_5.text(), self.actualizarLine_4.text(),
                  self.actualizarLine_6.text(), self.actualizarLine_7.text()]
-            for index in range(5):
-                if c[index] == '':
-                    c[index] = None
-            if c[1] != None:
-                new_quantity = float(c[1])
-
-            if c[4] != None:
-                new_dateTime = datetime.strptime(c[4], "%Y-%m-%d").date()
-
-            self.loop.run_until_complete(self._upgrade_info( indx, c[0], new_quantity,
-            c[2], c[3], new_dateTime))
+            c = self.func.group_list(c)
+            self.loop.run_until_complete(self._upgrade_info( indx, c[0], c[1], c[2], c[3], c[4]))
             log = Login()
             self.editarFrame_2.hide()
             if self.indicator == False and self.lineEdit.text() == '':
@@ -308,7 +301,8 @@ class MainPrincipal(QDialog):
                 date = self.loop.run_until_complete(self.search(self.lineEdit.text()))
         except ValueError as e:
             print(f"ERRO_3: {e}")
-            QtWidgets.QMessageBox.information(self, "Sistema de Almacen", "El valor no es un número válido")
+            QtWidgets.QMessageBox.information(self, "Sistema de Almacen",
+            "El valor no es un número válido o una fecha valida.")
         except Exception as e:
             print(f"ERROR_2: {e}")
             if str(e) != 'Event loop is closed':
@@ -323,6 +317,19 @@ class MainPrincipal(QDialog):
             self.eliminarFrame.hide()
         except Exception as e:
             print(f"ERROR_2: {e}")
+
+    def actions_addInsumo(self):
+        try:
+            c = [self.actualizarLine_11.text(), self.actualizarLine_13.text(), self.actualizarLine_12.text(),
+                 self.actualizarLine_14.text(), self.actualizarLine_15.text()]
+            c = self.func.group_list(c)
+            self.loop.run_until_complete(self._addInsumo(c[0], c[1], c[2], c[3], c[4]))
+            log = Login()
+            date = self.loop.run_until_complete(log.get_date())
+            self.aggFrame.hide()
+            self.show_items(date)
+        except Exception as e:
+            print(f"ERRRORORORS: {e}")
 
     async def _upgrade(self, _name, _quantity):
         self.indicator = False
@@ -348,7 +355,16 @@ class MainPrincipal(QDialog):
         await ii.delete_item(_name)
         await close()
 
-
+    async def _addInsumo(self, _name, _quantity, _unit, _lot, _exp):
+        ii = ItemInventory()
+        await init()
+        verific = await ii.verific_exist(_name)
+        if verific:
+            await ii.add_item(_name, _quantity, _unit, _lot, _exp)
+        else:
+            QtWidgets.QMessageBox.information(self, "Sistema de Almacen",
+            "Ya se encuentra un articulo con esta descripcion.")
+        await close()
 
     async def search(self, _name_item):
         ii = ItemInventory()

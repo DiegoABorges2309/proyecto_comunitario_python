@@ -34,16 +34,13 @@ class ItemInventory():
         result = list(await Items.filter(name_item__icontains=query))
         return result
 
-    async def add_item(self, _name_item, _quantity, _unit, _lot):
+    async def add_item(self, _name_item, _quantity, _unit, _lot, _exp):
         try:
-            result = await Items.create(name_item=_name_item, quantity=_quantity, unit=_unit, lot=_lot)
-            print(result)
-            if result:
-                print("ok")
-            else:
-                print("no")
+            result = await Items.create(name_item=_name_item, quantity=_quantity, unit=_unit, lot=_lot, exp=_exp)
+            return True
         except Exception as e:
             print(e)
+            return False
 
     async def update_item(self, _name, _quantity):
         try:
@@ -74,6 +71,14 @@ class ItemInventory():
             await item.save()
         except Exception as e:
             print(f"{e}")
+
+    async def verific_exist(self, _name):
+        try:
+            item = await Items.filter(name_item=_name)
+            if item[0]: return False
+        except Exception as e:
+            if str(e) == "list index out of range":
+                return True
 
 if __name__ == '__main__':
     pass
