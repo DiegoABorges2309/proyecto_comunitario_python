@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit
 from PyQt5.uic import loadUi
 from src.db.__init__ import init, close
-from src.db.crud import UserLogin, ItemInventory
+from src.db.crud import UserLogin, ItemInventory, ExelInventory
 from functions import Functions
 from img import img_qrc
 
@@ -106,9 +106,10 @@ class MainPrincipal(QDialog):
         self._lot = self.actualizarLine_6.text()
         self._exp = self.actualizarLine_7.text()
         self.guardarBoton_3.clicked.connect(lambda: self.actions_upgrade_info(self.date.name_item))
+        self.guardarBoton_4.clicked.connect(lambda: self.actions_add_exel(self.date.id))
         self.guardarBoton_5.clicked.connect(lambda: self.actions_delete(self.date.name_item))
         self.guardarBoton_6.clicked.connect(self.eliminarFrame.hide)
-        self.guardarBoton_7.clicked.connect(self.actions_addInsumo)
+        self.guardarBoton_7.clicked.connect(self.actions_add_insumo)
 
     def mousePressEvent(self, event):
         self.aggFrame.hide()
@@ -194,8 +195,6 @@ class MainPrincipal(QDialog):
                     linesEdit[index].setText('')
                 else:
                     linesEdit[index].setText(b[index])
-
-
         except Exception as e:
             print(e)
             QtWidgets.QMessageBox.information(self, "Inventario de Almacen", f"e")
@@ -232,11 +231,11 @@ class MainPrincipal(QDialog):
             buttom = self.sender()
             position = buttom.pos()
 
-            if buttom and position.y() < 300:
+            if buttom and position.y() < 350:
                 self.editarFrame.setGeometry(position.x()-45, position.y()+47, 111, 141)
                 self.editarFrame.show()
             else:
-                self.editarFrame.setGeometry(position.x() - 45, 345, 111, 141)
+                self.editarFrame.setGeometry(position.x()-45, 378, 111, 141)
                 self.editarFrame.show()
 
             self.editarFrame_2.hide()
@@ -251,9 +250,28 @@ class MainPrincipal(QDialog):
                                         250, self.editarFrame_2, 441, 271))
             self.eliminar.clicked.connect(lambda: self.show_frames(position.x()-45, position.y()+47, date,
                                         397, self.eliminarFrame, 301, 111))
+            self.exel.clicked.connect(lambda: self.show_frames(position.x() - 45, position.y() + 47, date,
+                                        308, self.exelFrame, 301, 211))
+            #Agregado:
+            indicador_exist = self.loop.run_until_complete(self._get_exel(date.id))
+            if len(indicador_exist) == 0:
+                self.actualizarLine_8.setText("")
+                self.actualizarLine_9.setText("")
+                self.actualizarLine_10.setText("")
+                self.guardarBoton_7.show()
+                self.guardarBoton_8.hide()
+            else:
+                ejem = indicador_exist[0]
+                self.guardarBoton_8.show()
+                self.guardarBoton_7.hide()
+                self.actualizarLine_8.setText(ejem.name_docx_one)
+                self.actualizarLine_9.setText(ejem.name_docx_two)
+                self.actualizarLine_10.setText(ejem.name_docx_tre)
         except Exception as e:
             print(e)
-            QtWidgets.QMessageBox.information(self, "Inventario de Almacen", f"{e}")
+            if str(e) != 'Event loop is closed':
+                QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
+
 
     def actions_search(self):
         try:
@@ -317,18 +335,32 @@ class MainPrincipal(QDialog):
         except Exception as e:
             print(f"ERROR_2: {e}")
 
-    def actions_addInsumo(self):
+    def actions_add_insumo(self):
         try:
             c = [self.actualizarLine_11.text(), self.actualizarLine_13.text(), self.actualizarLine_12.text(),
                  self.actualizarLine_14.text(), self.actualizarLine_15.text()]
             c = self.func.group_list(c)
-            self.loop.run_until_complete(self._addInsumo(c[0], c[1], c[2], c[3], c[4]))
+            self.loop.run_until_complete(self._add_insumo(c[0], c[1], c[2], c[3], c[4]))
             log = Login()
             date = self.loop.run_until_complete(log.get_date())
             self.aggFrame.hide()
             self.show_items(date)
         except Exception as e:
             print(f"ERRRORORORS: {e}")
+
+    def actions_add_exel(self, _indx):
+        try:
+            c = [self.actualizarLine_8.text(), self.actualizarLine_9.text(), self.actualizarLine_10.text()]
+            for index in range(2):
+                if c[index] == "":
+                    c[index] = None
+            result = self.loop.run_until_complete(self._add_exel(_indx, c[0], c[1], c[2]))
+            print(c[0])
+            print(c[1])
+            print(c[2])
+            self.exelFrame.hide()
+        except Exception as e:
+            print(f'ErroExel1: {e}')
 
     async def _search(self, _name_item):
         ii = ItemInventory()
@@ -366,7 +398,7 @@ class MainPrincipal(QDialog):
         await ii.delete_item(_name)
         await close()
 
-    async def _addInsumo(self, _name, _quantity, _unit, _lot, _exp):
+    async def _add_insumo(self, _name, _quantity, _unit, _lot, _exp):
         ii = ItemInventory()
         await init()
         verific = await ii.verific_exist(_name)
@@ -376,6 +408,20 @@ class MainPrincipal(QDialog):
             QtWidgets.QMessageBox.information(self, "Sistema de Almacen",
             "Ya se encuentra un articulo con esta descripcion.")
         await close()
+
+    async def _add_exel(self, _id, _name_doc1, _name_doc2, _name_doc3):
+        ei = ExelInventory()
+        await init()
+        result = await ei.save_exel(_id, _name_doc1, _name_doc2, _name_doc3)
+        print(f"aquiiii{result}")
+        await close()
+
+    async def _get_exel(self, _id):
+        ei = ExelInventory()
+        await init()
+        result = await ei.get_name_exel(id=_id)
+        await close()
+        return result
 
 if __name__ == '__main__':
     try:
