@@ -1,5 +1,5 @@
 import asyncio
-from src.db.models import Users, Items
+from src.db.models import Users, Items, Exel
 
 class UserLogin():
     def __init__(self):
@@ -90,6 +90,19 @@ class ItemInventory():
         except Exception as e:
             if str(e) == "list index out of range":
                 return True
+
+class ExelInventory():
+    def __init__(self):
+        pass
+
+    async def save_exel(self, id, name_doc1, name_doc2, name_doc3):
+        result = await Exel.create(exel_id=id, name_docx_one=name_doc1, name_docx_two=name_doc2, name_docx_tre=name_doc3)
+        print(result)
+
+    async def get_name_exel(self, id):
+        result = await Exel.filter(exel_id=id)
+        return result
+
 
 if __name__ == '__main__':
     pass
