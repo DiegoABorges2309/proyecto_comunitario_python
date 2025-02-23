@@ -103,6 +103,9 @@ class ExelInventory():
         result = await Exel.filter(exel_id=id)
         return result
 
-
-if __name__ == '__main__':
-    pass
+    async def update_info_exel(self, id, name_doc1, name_doc2, name_doc3):
+        result = await Exel.filter(exel_id=id).first()
+        result.name_docx_one = name_doc1
+        result.name_docx_two = name_doc2
+        result.name_docx_tre = name_doc3
+        await result.save()

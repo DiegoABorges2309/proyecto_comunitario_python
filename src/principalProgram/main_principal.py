@@ -110,6 +110,7 @@ class MainPrincipal(QDialog):
         self.guardarBoton_5.clicked.connect(lambda: self.actions_delete(self.date.name_item))
         self.guardarBoton_6.clicked.connect(self.eliminarFrame.hide)
         self.guardarBoton_7.clicked.connect(self.actions_add_insumo)
+        self.guardarBoton_8.clicked.connect(lambda: self.action_upgrade_info_exel(self.date.id))
 
     def mousePressEvent(self, event):
         self.aggFrame.hide()
@@ -272,7 +273,6 @@ class MainPrincipal(QDialog):
             if str(e) != 'Event loop is closed':
                 QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
 
-
     def actions_search(self):
         try:
             text = self.lineEdit.text()
@@ -323,7 +323,7 @@ class MainPrincipal(QDialog):
         except Exception as e:
             print(f"ERROR_2: {e}")
             if str(e) != 'Event loop is closed':
-                QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"{e}")
+                QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"ERROR: {e}")
 
     def actions_delete(self, _name):
         try:
@@ -361,6 +361,15 @@ class MainPrincipal(QDialog):
             self.exelFrame.hide()
         except Exception as e:
             print(f'ErroExel1: {e}')
+
+    def action_upgrade_info_exel(self, _id):
+        try:
+            self.loop.run_until_complete(self._upgrade_info_exel(_id, self.actualizarLine_8.text(),
+                                                                 self.actualizarLine_9.text(),
+                                                                 self.actualizarLine_10.text()))
+            self.exelFrame.hide()
+        except Exception as e:
+            QtWidgets.QMessageBox.information(self, "Sistema de Almacen", f"ERROR: {e}")
 
     async def _search(self, _name_item):
         ii = ItemInventory()
@@ -422,6 +431,12 @@ class MainPrincipal(QDialog):
         result = await ei.get_name_exel(id=_id)
         await close()
         return result
+
+    async def _upgrade_info_exel(self, _id, _name_doc1, _name_doc2, _name_doc3):
+        ei = ExelInventory()
+        await init()
+        result = await ei.update_info_exel(_id, _name_doc1, _name_doc2, _name_doc3)
+        await close()
 
 if __name__ == '__main__':
     try:
