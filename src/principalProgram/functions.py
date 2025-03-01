@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 from openpyxl import load_workbook
 
 class Functions:
@@ -19,6 +20,7 @@ class Functions:
 
 class SaveExel:
     def __init__(self):
+        self.result_boolean = None
         self._index = 0
 
     def save_one(self, _row, _quantity, _wb, _file):
@@ -31,7 +33,6 @@ class SaveExel:
     def save_two(self, _row, _quantity, _time, _wb, _file):
         self._index = 21
         for _cell in _row[-self._index::]:
-            print(_cell)
             _cell.value = _quantity
             _wb.save(_file)
             break
@@ -41,8 +42,14 @@ class SaveExel:
             _wb.save(_file)
             break
 
-    def save(self, _file, _sheet, _column, _name, quantity, _time):
-        self._index = 0
+    def save_tre(self, _row, _quantity, _wb, _file):
+        self._index = 3
+        for _cell in _row[-self._index::]:
+            _cell.value = _quantity
+            _wb.save(_file)
+            return True
+
+    def save(self, _file, _sheet, _column, _name, quantity):
         wb = load_workbook(_file)
         ws = wb[_sheet]
         column = ws[_column]
@@ -53,29 +60,27 @@ class SaveExel:
                     SaveExel.save_one(self, _row, quantity, wb, _file)
 
                 if _file == "docx/docxxx2.xlsx":
-                    SaveExel.save_two(self, _row, quantity, _time, wb, _file)
+                    time_today = datetime.today()
+                    convert_time = datetime.strptime(str(time_today.date()), "%Y-%m-%d").date()
+                    SaveExel.save_two(self, _row, quantity, convert_time.strftime(format="%d/%m/%Y"), wb, _file)
 
                 if _file == "docx/docxxx3.xlsx":
-                    pass
+                    SaveExel.save_tre(self, _row, quantity, wb, _file)
 
-        print("Listo")
+                return True
+            else:
+                pass
 
-    def action_save(self, _name, _quantity, _time):
+    def action_save(self, _name, _quantity):
         list_name = _name
         list_file = ["docx/docxxx1.xlsx", "docx/docxxx2.xlsx", "docx/docxxx3.xlsx"]
         list_sheet = ['MMQ  HOSPITAL ', 'MATERIA MQ', 'CONSOLIDADO MMQ']
         list_column = ['A', 'B', 'B']
         clean_sheet = 'MATERIAL DE ASEO-LIMPIEZA '
-
+        self.result_boolean = False
         for index in range(3):
-            self.save(list_file[index], list_sheet[index], list_column[index], list_name[index], _quantity, _time)
+            _bool = self.save(list_file[index], list_sheet[index], list_column[index], list_name[index], _quantity)
+            if _bool is not None:
+                self.result_boolean = _bool
 
-if __name__ == '__main__':
-    try:
-        time = datetime.today()
-        convert_time = datetime.strptime(str(time.date()), "%Y-%m-%d").date()
-        prueba = SaveExel()
-        nombres = ["ADHESIVO", "ADHESIVO", "epa"]
-        prueba.action_save(nombres, 12, convert_time.strftime(format="%d/%m/%Y"))
-    except Exception as e:
-        print(f"ERRORES :: {e}")
+        return self.result_boolean
